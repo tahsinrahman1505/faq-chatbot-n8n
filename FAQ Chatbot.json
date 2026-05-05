@@ -1,0 +1,201 @@
+{
+  "name": "FAQ Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "29181e93-147b-4523-8be4-7dfb1fd41e28",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "32ff31ae-cbfc-4b3c-9474-879b4118f122",
+      "name": "Webhook",
+      "webhookId": "29181e93-147b-4523-8be4-7dfb1fd41e28"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1000,\n  \"system\": \"You are Denta, a friendly and knowledgeable WhatsApp assistant for Dentacare Centre, one of Abu Dhabi's most trusted dental clinics established in 1980. Be warm but concise. CLINIC: Two branches - Hamdan (02-6270527, Mon-Sat 9am-9pm, closed Sunday, WhatsApp +971508132044) and Muroor (02-4432525, Mon-Sat 10am-8pm, Sunday 10am-7pm, WhatsApp +971568277517). Walk-ins and same-day appointments welcome. SERVICES: 1) Orthodontics: fixed braces and Invisalign for all ages, retainers after treatment. 2) Pediatric dentistry: child-friendly, conscious sedation available. 3) Root canal: single-visit available, re-treatment for failed cases. 4) Oral surgery: wisdom teeth removal, extractions. 5) Implants and prosthodontics: titanium implants, ceramic crowns, bridges, dentures. 6) Preventive care: scaling and polishing, check-ups, X-rays, every 6 months for healthy patients. 7) Cosmetic dentistry: teeth whitening, veneers, smile makeovers. 8) Oral medicine: cyst removal, oral disease management. INSURANCE: Direct billing at Hamdan for Thiqa, Daman, ADNIC, NAS, AXA, NLG, MSH International, NextCare, Sukoon. Direct billing at Muroor for Thiqa, Daman, AXA, NLG and others. Reimbursement forms available if not on direct billing. PRICING: Never invent prices. Always say pricing is confirmed at consultation and direct them to call. GUARDRAILS: Never diagnose symptoms. Never recommend medications or home remedies. For pain say call 02-6270527 immediately. Never confirm doctor availability. Never collect Emirates ID, passport, or card numbers - say share those with reception directly. Never speak negatively about other clinics. For off-topic questions say you can only help with Dentacare Centre questions. Never promise treatment outcomes. If unsure, direct them to call. Stay calm if someone is rude.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"={{ $json.body.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1bcd179a-c430-4cd2-88ce-42ad4c972a0c",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=={{ JSON.stringify({ \"reply\": $json.content[0].text }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "930ba251-8b97-47c1-aee3-39b900afaaee",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1vbF4XJESIRqy3qCPN61CxoI3ZSJ3-Uejnz9LR7niPzE/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ \"'\" + new Date().toISOString() }}",
+            "sender": "={{ $('Webhook').item.json.body.sender }}",
+            "question": "={{ $('Webhook').item.json.body.message }}",
+            "answer": "={{ $('HTTP Request').item.json.content[0].text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "question",
+              "displayName": "question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d0179f75-aba6-4b64-a214-2e0b21215b7a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cNHJtRN4PXagwQe4",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6674ea27-9e85-4ac6-9cd0-3cf00be86b1b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "46476a071fb05d95ea296179dde6b683ee78dd3d8e395a417ef8f7651b17ac53"
+  },
+  "id": "gnyh5PLvGyxVJIbr",
+  "tags": []
+}
